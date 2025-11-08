@@ -1,3 +1,5 @@
+using Api;
+using Api.Services;
 using DataAccess;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -5,9 +7,16 @@ using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Services.AddOptionsWithValidateOnStart<S3Options>()
+    .Bind(builder.Configuration.GetSection(nameof(S3Options)))
+    .ValidateDataAnnotations();
+
 // Add services to the container.
+builder.Services.AddSingleton<IImageStorageService, S3ImageStorageService>();
+builder.Services.AddScoped<IImageService, ImageService>();
 
 builder.Services.AddControllers();
+
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
 
@@ -19,6 +28,13 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 );
 
 builder.Services.AddAuthorization();
+
+builder.Services.AddAuthorizationBuilder()
+    .AddPolicy("UploaderOnly", policy => policy.RequireAssertion(ctx =>
+    {
+        return true;
+    }));
+
 builder.Services.AddIdentityApiEndpoints<IdentityUser>()
     .AddEntityFrameworkStores<AppDbContext>();
 
@@ -41,7 +57,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();

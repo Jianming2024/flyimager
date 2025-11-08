@@ -1,3 +1,6 @@
+https://flyimager.fly.dev/
+I can register a new user and log in. But can not upload the images and view. Since the time is limited, I will fix it later.
+
 # flyimager
 
 ## Quick start
